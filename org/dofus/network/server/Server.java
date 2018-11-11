@@ -12,6 +12,7 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.LineDelimiter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+import org.dofus.network.server.handlers.VersionHandler;
 
 public class Server implements IoHandler {
 
@@ -56,11 +57,6 @@ public class Server implements IoHandler {
 	@Override
 	public void sessionCreated(IoSession session) throws Exception {
 		System.out.println("[Server-" + session.getId() + "] created");
-		
-		ServerClient client = new ServerClient(session);
-		//client.setHandler(handler);
-		
-		session.setAttribute("server");
 	}
 
 	@Override
@@ -71,6 +67,11 @@ public class Server implements IoHandler {
 	@Override
 	public void sessionOpened(IoSession session) throws Exception {
 		System.out.println("[Server-" + session.getId() + "] opened");
+		
+		ServerClient client = new ServerClient(session);
+		client.setHandler(new VersionHandler(this, client));
+		
+		session.setAttribute("server", client);
 	}
 
 	public void start(short port) throws IOException {

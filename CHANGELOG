@@ -1,0 +1,12 @@
+[1.2.7-a]
+	- Add database connector
+	- Add mina for server/client with handler
+	- Create the first class (Accounts, Characters...)
+	- Database :
+		- AccountData (lazy-loading, update etc...)
+	- Login handler :
+		- Version
+		- Authentification
+		- Choose nickname if doesn't exist
+		- [WIP] Server choice
+	- Some minor fix

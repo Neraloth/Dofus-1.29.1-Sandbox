@@ -54,7 +54,6 @@ public class Game implements IoHandler {
 	@Override
 	public void sessionCreated(IoSession session) throws Exception {
 		System.out.println("[Game-" + session.getId() + "] created");
-		session.setAttribute("game");
 	}
 
 	@Override
@@ -65,6 +64,11 @@ public class Game implements IoHandler {
 	@Override
 	public void sessionOpened(IoSession session) throws Exception {
 		System.out.println("[Game-" + session.getId() + "] opened");
+		
+		GameClient client = new GameClient(session);
+		//client.setHandler(new Handler(this, client));
+		
+		session.setAttribute("client", client);
 	}
 
 	public void start(short port) throws IOException {

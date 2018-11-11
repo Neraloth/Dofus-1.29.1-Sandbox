@@ -1,0 +1,4 @@
+Configuration externe
+Logger
+Système de cache/plugins
+Check si l'uncrypt du mdp au moment de l'authHandler est plus rapide que l'encrypt

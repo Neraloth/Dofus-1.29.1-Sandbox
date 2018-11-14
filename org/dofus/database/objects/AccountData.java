@@ -22,7 +22,9 @@ public class AccountData {
 	private static final ConcurrentMap<Integer, Accounts> accounts = new ConcurrentHashMap<Integer, Accounts>();
 	//By username
 	private static final ConcurrentMap<String, Accounts> accountsByUsername = new ConcurrentHashMap<String, Accounts>();
-
+	//By key
+	private static final ConcurrentMap<String, Accounts> accountsByKey = new ConcurrentHashMap<String, Accounts>();
+	
 	public static Accounts load(String username) {
 		if(!accountsByUsername.containsKey(username.toLowerCase())) { //Si le compte n'est pas dans le hashMap
 			try {
@@ -54,19 +56,6 @@ public class AccountData {
 		return accountsByUsername.get(username);
 	}
 	
-	public static void updateNickname(Accounts account) throws SQLException {
-		if(account != null) {
-			String query = "UPDATE `accounts` SET `nickname` = '" + account.getNickname() + "' WHERE `id` = " + account.getId() + ";";
-			
-			PreparedStatement statement = connection.prepareStatement(query);
-			
-			statement.execute();
-			
-			statement.clearParameters();
-	        statement.close();
-		}
-	}
-	
 	public static boolean nicknameIsExist(String nickname) {
 		try {
 			ResultSet reader = connection
@@ -86,6 +75,19 @@ public class AccountData {
 		return false;
 	}
 	
+	public static void updateNickname(Accounts account) throws SQLException {
+		if(account != null) {
+			String query = "UPDATE `accounts` SET `nickname` = '" + account.getNickname() + "' WHERE `id` = " + account.getId() + ";";
+			
+			PreparedStatement statement = connection.prepareStatement(query);
+			
+			statement.execute();
+			
+			statement.clearParameters();
+	        statement.close();
+		}
+	}
+	
 	public static Accounts getAccountById(int id) {
 		if(!accounts.containsKey(id))
 			return null;
@@ -96,5 +98,21 @@ public class AccountData {
 		if(!accountsByUsername.containsKey(username))
 			return null;
 		return accountsByUsername.get(username);
+	}
+
+	public static Accounts getAccountByKey(String key) {
+		if(!accountsByKey.containsKey(key))
+			return null;
+		return accountsByKey.get(key);
+	}
+	
+	public static void addAccountByKey(Accounts account, String key) {
+		if(!accountsByKey.containsKey(key))
+			accountsByKey.put(key, account);
+	}
+	
+	public static void removeAccountByKey(String key) {
+		if(accountsByKey.containsKey(key))
+			accountsByKey.remove(key);
 	}
 }

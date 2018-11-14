@@ -12,6 +12,7 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.LineDelimiter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+import org.dofus.network.game.handlers.GameScreenHandler;
 
 public class Game implements IoHandler {
 
@@ -34,11 +35,21 @@ public class Game implements IoHandler {
 	@Override
 	public void exceptionCaught(IoSession session, Throwable object) throws Exception {
 		System.out.println("[Game-" + session.getId() + "] exception " + object.getMessage());
+		session.write("BN");
 	}
 
 	@Override
 	public void messageReceived(IoSession session, Object object) throws Exception {
-		System.out.println("[Game-" + session.getId() + "] received " + (String) object);
+		String packet = (String) object;
+		
+		System.out.println("[Game-" + session.getId() + "] received " + packet);
+		
+		if(packet.equals("ping"))
+			session.write("pong");
+        else if(packet.equals("qping"))
+        	session.write("qpong");
+        else
+		((GameClient) session.getAttribute("client")).getHandler().parse(packet);
 	}
 
 	@Override
@@ -49,11 +60,17 @@ public class Game implements IoHandler {
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
 		System.out.println("[Game-" + session.getId() + "] closed");
+		((GameClient) session.getAttribute("client")).getHandler().onClosed();
 	}
 
 	@Override
 	public void sessionCreated(IoSession session) throws Exception {
 		System.out.println("[Game-" + session.getId() + "] created");
+		
+		GameClient client = new GameClient(this, session);
+		client.setHandler(new GameScreenHandler(this, client));
+		
+		session.setAttribute("client", client);
 	}
 
 	@Override
@@ -64,11 +81,6 @@ public class Game implements IoHandler {
 	@Override
 	public void sessionOpened(IoSession session) throws Exception {
 		System.out.println("[Game-" + session.getId() + "] opened");
-		
-		GameClient client = new GameClient(session);
-		//client.setHandler(new Handler(this, client));
-		
-		session.setAttribute("client", client);
 	}
 
 	public void start(short port) throws IOException {

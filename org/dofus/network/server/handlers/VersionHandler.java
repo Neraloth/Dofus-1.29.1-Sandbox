@@ -24,7 +24,7 @@ public class VersionHandler extends ServerClientHandler {
 
 	@Override
 	public void onClosed() {
-		// TODO Auto-generated method stub
+		System.out.println("VersionHandler : onClosed()");
 	}
 
 }

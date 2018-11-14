@@ -2,11 +2,11 @@ package org.dofus.network.game;
 
 public abstract class GameClientHandler {
 
-    protected Game Game;
+    protected Game game;
     protected GameClient client;
 
-    protected GameClientHandler(Game Game, GameClient client) {
-        this.Game = Game;
+    protected GameClientHandler(Game game, GameClient client) {
+        this.game = game;
         this.client = client;
     }
 

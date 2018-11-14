@@ -1,5 +1,8 @@
 package org.dofus.objects;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.apache.mina.core.session.IoSession;
 import org.dofus.utils.Cipher;
 
@@ -15,7 +18,11 @@ public class Accounts {
 	
 	private boolean banned = false;
 	
+	//By id
+	private static ConcurrentMap<Integer, Characters> characters = new ConcurrentHashMap<Integer, Characters>();
+	
 	private IoSession session;
+	private boolean connected = false;
 	
 	public Accounts(int id, String username, String password, String question, String answer, String nickname, boolean banned) {
 		this.setId(id);
@@ -83,6 +90,30 @@ public class Accounts {
 		this.banned = banned;
 	}
 
+	public ConcurrentMap<Integer, Characters> getCharacters() {
+		return characters;
+	}
+
+	public static void setCharacters(ConcurrentMap<Integer, Characters> characters) {
+		Accounts.characters = characters;
+	}
+	
+	public Characters getCharacterById(int id) {
+		if(characters.containsKey(id))
+			return characters.get(id);
+		return null;
+	}
+	
+	public void addCharacter(Characters character) {
+		if(!getCharacters().containsKey(character.getId()))
+			getCharacters().put(character.getId(), character);
+	}
+	
+	public void removeCharacter(Characters character) {
+		if(getCharacters().containsKey(character.getId()))
+			getCharacters().remove(character.getId());
+	}
+	
 	public IoSession getSession() {
 		return session;
 	}
@@ -91,8 +122,15 @@ public class Accounts {
 		this.session = session;
 	}
 
-	//TODO: Check si la uncrypt est plus rapide
 	public boolean valid(String password, String key) {
 		return password.equals(Cipher.encode(this.password, key));
+	}
+
+	public boolean isConnected() {
+		return connected;
+	}
+
+	public void setConnected(boolean connected) {
+		this.connected = connected;
 	}
 }

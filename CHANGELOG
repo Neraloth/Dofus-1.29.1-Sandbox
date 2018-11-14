@@ -6,7 +6,19 @@
 		- AccountData (lazy-loading, update etc...)
 	- Login handler :
 		- Version
-		- Authentification
+		- Authentication
 		- Choose nickname if doesn't exist
-		- [WIP] Server choice
+		- Server choice (no possibility to search a friend this is not useful now)
 	- Some minor fix
+	- Start game approach
+		- Game server screen
+		- Character list
+		- Create character
+		- Deletion character
+		- Choose character
+	- In game
+		- Sync movement
+			- Changing map
+	- Cleaning code
+	- Add chat (private message)
+	- Add emote

@@ -28,7 +28,7 @@ public class NicknameHandler extends ServerClientHandler {
 
 	@Override
 	public void onClosed() {
-		// TODO Auto-generated method stub
+		System.out.println("NicknameHandler : onClosed()");
 	}
 
 }

@@ -1,4 +1,11 @@
 Configuration externe
 Logger
-Système de cache/plugins
-Check si l'uncrypt du mdp au moment de l'authHandler est plus rapide que l'encrypt
+System cache/plugins
+Class for packet
+Characters ID with time and date fixe?
+Night time
+Make a bot for testing capacities
+Complete Constants class with dofus source
+
+
+Ecran noir au moment de selecte le perso (j'ai déco/reco et c'etais bon) mais verif d'ou ca vient (client)?

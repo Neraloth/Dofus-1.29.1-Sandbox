@@ -26,8 +26,10 @@ public class Connector {
 	
 	public void stop() {
 		try {
-			if(!getConnection().isClosed())
+			if(!getConnection().isClosed()) {
 				getConnection().close();
+				System.out.println("Database successfully stoped");
+			}
 		} catch(SQLException e) {
 			System.out.println("Impossible to close the database : " + e.getMessage());
 		}

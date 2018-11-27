@@ -1,6 +1,6 @@
 [1.2.7-a]
-	- Add database connector
-	- Add mina for server/client with handler
+	- Database connector
+	- Mina for server/client with handler
 	- Create the first class (Accounts, Characters...)
 	- Database :
 		- AccountData (lazy-loading, update etc...)
@@ -10,6 +10,8 @@
 		- Choose nickname if doesn't exist
 		- Server choice (no possibility to search a friend this is not useful now)
 	- Some minor fix
+	
+[2.9.24-a]
 	- Start game approach
 		- Game server screen
 		- Character list
@@ -20,5 +22,22 @@
 		- Sync movement
 			- Changing map
 	- Cleaning code
-	- Add chat (private message)
-	- Add emote
+	- In game
+		- Chat (private message)
+		- Emote
+		
+[3.17.37-a]
+	- In game
+		- Channels character management
+		- Character statistics
+		- Breed template
+		- Experience and level up
+		- Boosting character statistics
+		- [WIP] Add partially alignment system
+		- Saving character
+		- Rights and restrictions to base36
+		- [WIP] Party
+		
+	- Bug fix
+		- Movement roll-back (send 2x packet)
+		- Remove character on map on disconnection/changing characters

@@ -8,9 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.dofus.database.Connector;
-import org.dofus.objects.Accounts;
+import org.dofus.objects.accounts.Account;
 
-public class AccountData {
+public class AccountsData {
 
 	/**
 	 * XXX: Tous les lengths de la table accounts sont fixé sur 16
@@ -19,13 +19,13 @@ public class AccountData {
 	private static final Connection connection = Connector.getConnection();
 	
 	//By id
-	private static final ConcurrentMap<Integer, Accounts> accounts = new ConcurrentHashMap<Integer, Accounts>();
+	private static final ConcurrentMap<Integer, Account> accounts = new ConcurrentHashMap<Integer, Account>();
 	//By username
-	private static final ConcurrentMap<String, Accounts> accountsByUsername = new ConcurrentHashMap<String, Accounts>();
+	private static final ConcurrentMap<String, Account> accountsByUsername = new ConcurrentHashMap<String, Account>();
 	//By key
-	private static final ConcurrentMap<String, Accounts> accountsByKey = new ConcurrentHashMap<String, Accounts>();
+	private static final ConcurrentMap<String, Account> accountsByKey = new ConcurrentHashMap<String, Account>();
 	
-	public static Accounts load(String username) {
+	public static Account load(String username) {
 		if(!accountsByUsername.containsKey(username.toLowerCase())) { //Si le compte n'est pas dans le hashMap
 			try {
 				ResultSet reader = connection
@@ -33,7 +33,7 @@ public class AccountData {
 	            		.executeQuery("SELECT * FROM `accounts` WHERE `username` = '" + username + "';");
 				
 				while(reader.next()) {
-					Accounts account = new Accounts(
+					Account account = new Account(
 							reader.getInt("id"), 
 							reader.getString("username").toLowerCase(), 
 							reader.getString("password"), 
@@ -75,7 +75,7 @@ public class AccountData {
 		return false;
 	}
 	
-	public static void updateNickname(Accounts account) throws SQLException {
+	public static void updateNickname(Account account) throws SQLException {
 		if(account != null) {
 			String query = "UPDATE `accounts` SET `nickname` = '" + account.getNickname() + "' WHERE `id` = " + account.getId() + ";";
 			
@@ -88,25 +88,25 @@ public class AccountData {
 		}
 	}
 	
-	public static Accounts getAccountById(int id) {
+	public static Account getAccountById(int id) {
 		if(!accounts.containsKey(id))
 			return null;
 		return accounts.get(id);
 	}
 	
-	public static Accounts getAccountByName(String username) {
+	public static Account getAccountByName(String username) {
 		if(!accountsByUsername.containsKey(username))
 			return null;
 		return accountsByUsername.get(username);
 	}
 
-	public static Accounts getAccountByKey(String key) {
+	public static Account getAccountByKey(String key) {
 		if(!accountsByKey.containsKey(key))
 			return null;
 		return accountsByKey.get(key);
 	}
 	
-	public static void addAccountByKey(Accounts account, String key) {
+	public static void addAccountByKey(Account account, String key) {
 		if(!accountsByKey.containsKey(key))
 			accountsByKey.put(key, account);
 	}

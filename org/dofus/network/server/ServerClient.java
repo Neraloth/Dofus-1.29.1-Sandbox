@@ -1,7 +1,7 @@
 package org.dofus.network.server;
 
 import org.apache.mina.core.session.IoSession;
-import org.dofus.objects.Accounts;
+import org.dofus.objects.accounts.Account;
 import org.dofus.utils.StringUtils;
 
 public class ServerClient {
@@ -11,7 +11,7 @@ public class ServerClient {
 	
 	private final String key;
 	
-	private Accounts account;
+	private Account account;
 	
 	public ServerClient(IoSession session) {
 		setSession(session);
@@ -40,11 +40,11 @@ public class ServerClient {
 		return key;
 	}
 
-	public Accounts getAccount() {
+	public Account getAccount() {
 		return account;
 	}
 	
-	public void setAccount(Accounts account) {
+	public void setAccount(Account account) {
 		this.account = account;
 	}
 }

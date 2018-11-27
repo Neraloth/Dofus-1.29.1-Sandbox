@@ -3,9 +3,9 @@ package org.dofus.network.game;
 import java.util.Stack;
 
 import org.apache.mina.core.session.IoSession;
-import org.dofus.game.action.GameAction;
-import org.dofus.objects.Accounts;
-import org.dofus.objects.Characters;
+import org.dofus.game.actions.IGameAction;
+import org.dofus.objects.accounts.Account;
+import org.dofus.objects.actors.Characters;
 
 public class GameClient {
 
@@ -14,10 +14,10 @@ public class GameClient {
 	
 	private GameClientHandler handler;
 	
-	private Accounts account;
+	private Account account;
 	private Characters characters;
 	
-	private Stack<GameAction> actions = new Stack<>();
+	private Stack<IGameAction> actions = new Stack<>();
 	
 	public GameClient(Game game, IoSession session) {
 		setGame(game);
@@ -42,11 +42,11 @@ public class GameClient {
 		this.session = session;
 	}
 
-	public Accounts getAccount() {
+	public Account getAccount() {
 		return account;
 	}
 
-	public void setAccount(Accounts account) {
+	public void setAccount(Account account) {
 		this.account = account;
 	}
 
@@ -58,11 +58,11 @@ public class GameClient {
 		this.characters = characters;
 	}
 
-	public Stack<GameAction> getActions() {
+	public Stack<IGameAction> getActions() {
 		return actions;
 	}
 
-	public void setActions(Stack<GameAction> actions) {
+	public void setActions(Stack<IGameAction> actions) {
 		this.actions = actions;
 	}
 	

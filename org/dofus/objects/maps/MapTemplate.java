@@ -1,11 +1,14 @@
-package org.dofus.objects;
+package org.dofus.objects.maps;
+
+import java.lang.Character;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.dofus.objects.Characters.OrientationEnum;
+import org.dofus.objects.actors.Characters;
+import org.dofus.objects.actors.EOrientation;
 import org.dofus.utils.StringUtils;
 
 public class MapTemplate {
@@ -162,7 +165,7 @@ public class MapTemplate {
 	        }
 	    }
 
-	    public static char encode(OrientationEnum orientation) {
+	    public static char encode(EOrientation orientation) {
 	        return StringUtils.HASH.charAt(orientation.ordinal());
 	    }
 
@@ -176,8 +179,8 @@ public class MapTemplate {
 	                        StringUtils.HASH.indexOf(cellCode.charAt(1)));
 	    }
 
-	    public static OrientationEnum decode(char orientationCode) {
-	        return OrientationEnum.valueOf(StringUtils.HASH.indexOf(orientationCode));
+	    public static EOrientation decode(char orientationCode) {
+	        return EOrientation.valueOf(StringUtils.HASH.indexOf(orientationCode));
 	    }
 
 	    public static String encode(Collection<Node> nodes) {
@@ -290,7 +293,7 @@ public class MapTemplate {
 	public class Node {
 	    private short id;
 	    private Node parent;
-	    private OrientationEnum direction;
+	    private EOrientation direction;
 	    private Point position;
 	    private boolean walkable;
 	    private int g, h;
@@ -300,14 +303,14 @@ public class MapTemplate {
 	        this.position = position;
 	    }
 
-	    public Node(short id, Point position, boolean walkable, OrientationEnum direction) {
+	    public Node(short id, Point position, boolean walkable, EOrientation direction) {
 	        this.id = id;
 	        this.position = position;
 	        this.walkable = walkable;
 	        this.direction = direction;
 	    }
 
-	    public Node(Node parent, OrientationEnum direction, Cell cell) {
+	    public Node(Node parent, EOrientation direction, Cell cell) {
 	        this.id = cell.getId();
 	        this.parent = parent;
 	        this.direction = direction;
@@ -343,7 +346,7 @@ public class MapTemplate {
 	        return parent;
 	    }
 
-	    public OrientationEnum getDirection() {
+	    public EOrientation getDirection() {
 	        return direction;
 	    }
 

@@ -49,7 +49,7 @@ public class Game implements IoHandler {
         else if(packet.equals("qping"))
         	session.write("qpong");
         else
-		((GameClient) session.getAttribute("client")).getHandler().parse(packet);
+        	((GameClient) session.getAttribute("client")).getHandler().parse(packet);
 	}
 
 	@Override

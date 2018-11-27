@@ -1,45 +1,74 @@
 package org.dofus.network.game.handlers;
 
 import java.util.Date;
-import java.util.Map;
 
 import org.apache.mina.core.session.IoSession;
-import org.dofus.database.objects.CharacterData;
-import org.dofus.game.action.GameAction.ActionTypeEnum;
-import org.dofus.game.action.GameAction.GameActionType;
-import org.dofus.game.action.RolePlayMovement;
+import org.dofus.database.objects.CharactersData;
 import org.dofus.network.game.Game;
 import org.dofus.network.game.GameClient;
 import org.dofus.network.game.GameClientHandler;
-import org.dofus.objects.Characters;
-import org.dofus.objects.MapTemplate;
+import org.dofus.network.game.handlers.parsers.BasicParser;
+import org.dofus.network.game.handlers.parsers.BoostParser;
+import org.dofus.network.game.handlers.parsers.ChannelParser;
+import org.dofus.network.game.handlers.parsers.GameParser;
+import org.dofus.network.game.handlers.parsers.PartyParser;
+import org.dofus.network.game.handlers.parsers.WaypointParser;
 import org.dofus.objects.WorldData;
+import org.dofus.objects.actors.Characters;
 import org.dofus.utils.StringUtils;
 
 public class RolePlayHandler extends GameClientHandler {
-
+	
+	IoSession session = client.getSession();
+	Characters character = client.getCharacter();
+	
 	protected RolePlayHandler(Game game, GameClient client) {
 		super(game, client);
-		client.getSession().write("cC+i*#$p%!@"); // TODO Channels
+		session.write("cC+" + character.getChannels());
 		//Guild
 		//Subarea
+		
+		session.write("al|"); //TODO Area align status
 		//Spell
-		client.getSession().write("SL"); //Spell list message
-		client.getSession().write("AR6bk"); //TODO 6bk base 36
-		client.getSession().write("Ow0|1000"); //"Ow" + usedPods + "|" + maxPods;
-		client.getSession().write("eL0|"); //Quest?
-		client.getSession().write("BD" + StringUtils.CURRENT_DATE_FORMATTER.format(new Date())); // Send actual time
-		client.getSession().write("Im153;127.0.0.1"); //Address
-		client.getSession().write("Im189"); //Hello message
+		session.write("SL"); //Spell list message
+		session.write("AR" + character.getRestriction().toBase36());
+		session.write("Ow0|" + character.getMaxPods()); //TODO "Ow" + usedPods + "|" + maxPods;
+		session.write("eL0|"); //Quest?
+		session.write("BD" + StringUtils.CURRENT_DATE_FORMATTER.format(new Date())); // Send actual time
+		
+		session.write("ZS" + character.getAlignmentType()); //Send alignment id
+		session.write("Im153;127.0.0.1"); //Address
+		session.write("Im189"); //Hello message
 		//LastCo and last address here TODO
-		//Gestion de la nuit
+		
+		/*
+			Characters character = character;
+			if(character.getAlignment() > 0 && character.getAlignment() != 3 
+				&& character.getCurrentMap().getAlignment() > 0 
+				&& character.getCurrentMap().getAlignement() != character.getAlignment()) {
+				
+				session.write("Im091");
+				//save pos
+			}
+			*/
+		if(character.getEnergy() <= 2000)
+			session.write("M111|" + character.getEnergy());
+		session.write("IC|"); //On remet à zéro les drapeaux
+		session.write("BT82800000");//FIXME idk Gestion de la nuit
 		//Regen life
 	}
-
+	
 	@Override
 	public void parse(String packet) throws Exception {
         String[] args;
         switch(packet.charAt(0)) {
+	        case 'A':
+				switch(packet.charAt(1)) {
+				case 'B':
+					BoostParser.boost(character, session, Integer.parseInt(packet.substring(2)));
+				break;
+				}
+			break;
 			case 'B':
 				parseBasicsPacket(packet);
 			break;/*
@@ -72,10 +101,10 @@ public class RolePlayHandler extends GameClientHandler {
 			break;
 			case 'O':
 				parseObjectPacket(packet);
-			break;
+			break;*/
 			case 'P':
 				parsePartyPacket(packet);
-			break;
+			break;/*
 			case 'Q':
 				parseQuestPacket(packet);
 			break;
@@ -84,11 +113,49 @@ public class RolePlayHandler extends GameClientHandler {
 			break;
 			case 'S':
 				parseSpellPacket(packet);
-			break;
+			break;*/
 			case 'W':
 				parseWaypointPacket(packet);
-			break;*/
+			break;
         }
+	}
+
+	private void parsePartyPacket(String packet) {
+		switch(packet.charAt(1)) {
+			case 'A':
+				PartyParser.accept(character, session);
+			break;
+			case 'I':
+				PartyParser.invitation(character, session, packet.substring(2));
+			break;
+			case 'R':
+				PartyParser.refuse(character, session);
+			break;
+			case 'V':
+				PartyParser.leave(character, session, packet);
+			break;
+		}
+	}
+
+	private void parseWaypointPacket(String packet) {
+		switch(packet.charAt(1)) {
+			case 'p':
+				//create prism
+			break;
+			case 'u':
+			case 'U'://Use
+				WaypointParser.use(character, session, client, packet);
+			break;
+			case 'v'://Zaapis
+				WaypointParser.panelZaapis(character, session);
+			break;
+			case 'V'://Zaap
+				WaypointParser.panelZaaps(character, session);
+			break;
+			case 'w':
+				//Prism quit
+			break;
+		}
 	}
 
 	private void parseBasicsPacket(String packet) {
@@ -96,112 +163,22 @@ public class RolePlayHandler extends GameClientHandler {
 			case 'a': //Movement by click-map
 				switch(packet.charAt(2)) {
 					case 'M':
-						//FIXME: Restriction game master
-						if(!packet.substring(3).equalsIgnoreCase("NaN")) {
-							String[] data = packet.substring(3).split(",");
-							//FIXME: Load map by X, Y coordinate
-							int abscissa = Integer.parseInt(data[0]);
-							int ordinate = Integer.parseInt(data[1]);
-							//if(!map == null) teleport
-						}
-						break;
+						BasicParser.moveByClickMap(packet);
+					break;
 				}
 				break;
 			case 'A': //Console
-				
 				break;
 			case 'D': //Date
-				
 				break;
 			case 'M': //Message
-				/**
-				 * TODO: Player muted send BN, correct message etc...
-				 * Level 10 if i remember to speak on sell/recruit
-				 * XXX: Special packet for fight
-				 */
-				packet.replace("<", ""); packet.replace(">", "");
-				if(packet.length() == 3) return;
-				
-				StringBuilder message = new StringBuilder().append(packet.split("\\|", 2) [1]);
-				
-				switch(packet.charAt(2)) {
-					case '*': //Default
-						//if(!chr.containChannel(pck.charat(2)) return
-						for(Characters actor : client.getCharacter().getCurrentMap().getActors().values()) {
-				        	IoSession actorSession = WorldData.getSessionByAccount().get(actor.getOwner());
-				        	actorSession.write("cMK|" + client.getCharacter().getId() + "|" + client.getCharacter().getName() + "|" + message.toString());
-				       	}
-						break;
-					case '#': //TODO Fight channel
-						break;
-					case ':': //Sell channel TODO make better no-flood
-						for(Characters actor : WorldData.getCharacters().values()) {
-							IoSession actorSession = WorldData.getSessionByAccount().get(actor.getOwner());
-				        	actorSession.write("cMK:|" + client.getCharacter().getId() + "|" + client.getCharacter().getName() + "|" + message.toString());
-						}
-						break;
-					case '@': //Administration TODO game master
-						for(Characters actor : WorldData.getCharacters().values()) {
-							IoSession actorSession = WorldData.getSessionByAccount().get(actor.getOwner());
-				        	actorSession.write("cMK@|" + client.getCharacter().getId() + "|" + client.getCharacter().getName() + "|" + message.toString());
-						}
-						break;
-					case '?': //Recruit channel
-						for(Characters actor : WorldData.getCharacters().values()) {
-							IoSession actorSession = WorldData.getSessionByAccount().get(actor.getOwner());
-				        	actorSession.write("cMK?|" + client.getCharacter().getId() + "|" + client.getCharacter().getName() + "|" + message.toString());
-						}
-						break;
-					case '!': //Alignement channel TODO
-						break;
-					// case 'i' pour channel information mais il est en moins cC-i TODO
-					default:
-						String name = packet.substring(2).split("\\|") [0];
-						
-						Characters target = WorldData.getCharacterByName().get(name);
-						IoSession session = WorldData.getSessionByAccount().get(target.getOwner());
-						
-						if(!target.isConnected())
-							client.getSession().write("cMEf" + name);
-						//Im114;target.getName() if away / invi
-						
-						client.getSession().write(
-								"cMK" + "T|" + 
-								target.getId() + "|" +
-								target.getName() + "|" +
-								message.toString());
-						
-						
-						session.write(
-								"cMK" + "F|" + 
-							    client.getCharacter().getId() + "|" +
-							    client.getCharacter().getName() + "|" +
-							    message.toString());
-				}
+				BasicParser.channelsMessage(character, session, packet);
 				break;
 			case 'S': //Emote
-				/**
-				 * XXX If in fight we have special packet to send
-				 */
-				int id = Integer.parseInt(packet.substring(2));
-		        for(Characters actor : client.getCharacter().getCurrentMap().getActors().values()) {
-		        	IoSession actorSession = WorldData.getSessionByAccount().get(actor.getOwner());
-		        	actorSession.write("cS" + client.getCharacter().getId() + "|" + id);
-		       	}
+				BasicParser.emoticons(character, packet);
 				break;
 			case 'Y': //Character state
-				switch(packet.charAt(2)) {
-					case 'A': //Away
-						/** FIXME No-spam , Set chr away
-						 * if away Im038(away = false) else Im037(away = true)
-						 */
-						break;
-					case 'I': //Invisible
-						/** FIXME Set chr invisible
-						 * if invi Im051(invi = false) else Im050(invi = true)
-						 */
-						break;
-				}
+				BasicParser.states(packet);
 				break;
 		}
 	}
@@ -209,157 +186,49 @@ public class RolePlayHandler extends GameClientHandler {
 	private void parseChannelPacket(String packet) {
 		switch(packet.charAt(1)) {
 			case 'C': //Change channel
-				String channel = Integer.toString(packet.charAt(3));
-				switch(packet.charAt(2)) {
-				case '+': //Add
-					//FIXME chr.addChannel
-					break;
-				case '-': //Remove
-					//FIXME chr.removeChannel
-					break;
-					//TODO: Make chr update
-				}
-				break;
-			default:
-				System.out.println("Unknow packet for parseChannelPacket " + packet);
-				break;
+				ChannelParser.change(character, packet);
+			break;
 		}
 	}
 
 	private void parseGamePacket(String packet) throws Exception {
         switch(packet.charAt(1)) {
         case 'A': //Action
-        	switch(ActionTypeEnum.valueOf(Integer.parseInt(packet.substring(2, 5)))){
-                case MOVEMENT:
-                    if(client.isBusy())
-                        client.getSession().write("BN");
-                    else {
-                        RolePlayMovement movement = new RolePlayMovement(packet.substring(5), client);
-                        client.getActions().push(movement);
-                        
-                        movement.begin();
-                    }
-                    break;
-    		default:
-    			System.out.println("Unknow actionType for parseGamePacket " + packet);
-    			break;
-        	}
+        	GameParser.action(session, client, packet);
             break;
         case 'C': //GameCreation
-        	parseGameCreationMessage(client);
+        	GameParser.creation(character, session);
             break;
 
         case 'I': //GameInformation
-        	parseGameInformationMessage(client.getCharacter().getCurrentMap());
+        	GameParser.information(character, session, client, character.getCurrentMap());
             break;
 
         case 'K': //End Action
-            parseGameActionEndRequestMessage(packet.charAt(2) == 'K', packet.substring(3));
+        	GameParser.endAction(client, packet.charAt(2) == 'K', packet.substring(3));
             break;
         }
 	}
 
 	@Override
 	public void onClosed() {
-		WorldData.removeCharacterById(client.getCharacter().getId());
-		WorldData.removeCharacterByName(client.getCharacter().getName());
+		//Check si c'est une déconnexion ou un changement de perso
+		character.getCurrentMap().removeActor(character);
+        for(Characters actor : character.getCurrentMap().getActors().values()) {
+        	IoSession actorSession = WorldData.getSessionByAccount().get(actor.getOwner());
+        	if(!actorSession.equals(client.getSession()))
+        		actorSession.write("GM|-" + character.getId());
+       	}
+        
+        CharactersData.update(character);
+        
+		WorldData.removeCharacterById(character.getId());
+		WorldData.removeCharacterByName(character.getName());
 		WorldData.removeSessionByAccount(client.getAccount());
-		CharacterData.removeCharacter(client.getCharacter());
+		CharactersData.removeCharacter(character);
 		
-		client.getCharacter().setConnected(false);
+		character.setConnected(false);
 		client.getAccount().setConnected(false);
 		System.out.println("RolePlayHandler : onClosed()");
 	}
-
-	private void parseGameCreationMessage(GameClient client) {
-		client.getSession().write("GCK|1|");
-    	client.getSession().write(Characters.getStatisticsMessage());
-    	client.getSession().write("GDM|"
-    			+ client.getCharacter().getCurrentMap().getId() + "|"
-    			+ client.getCharacter().getCurrentMap().getDate() + "|"
-    			+ client.getCharacter().getCurrentMap().getKey() + "|"
-    			);
-    	client.getSession().write("fC" + 0); //nbr fight
-	}
-	
-	private void parseGameInformationMessage(MapTemplate map) {
-		map.addActor(client.getCharacter());
-        
-        StringBuilder sb = new StringBuilder(10 + 30 * map.getActors().size()).append("GM");
-    	
-        for(Characters actor : map.getActors().values()) {
-            sb.append("|+");
-            getRolePlayCharacterTypePattern(sb, actor);
-        }
-        
-        for(Characters actors : map.getActors().values()) {
-			IoSession actorSession = WorldData.getSessionByAccount().get(actors.getOwner());
-			
-			//Packet rollback if equals
-			if(!actorSession.equals(client.getSession()))
-				actorSession.write(sb.toString());
-			else
-				client.getSession().write(sb.toString());
-		}
-        
-        client.getSession().write("GDK");
-        client.getSession().write("fC" + 0); //nbr fight
-	}
-	
-    private void parseGameActionEndRequestMessage(boolean success, String args) throws Exception {
-        if(success)
-            client.getActions().pop().end();
-        else {
-            if(client.getActions().peek().getActionType() != GameActionType.MOVEMENT)
-                throw new Exception("invalid action : peeked action isn't a movement");
-
-            ((RolePlayMovement)client.getActions().pop()).cancel(Short.parseShort(args.substring(2)));
-        }
-    }
-    
-    public static String showActorsMessage(Map<Integer, Characters> character) {
-        StringBuilder sb = new StringBuilder(10 + 30 * character.size()).append("GM");
-        for(Characters actor : character.values()) {
-            sb.append("|+");
-            getRolePlayCharacterTypePattern(sb, actor);
-        }
-        return sb.toString();
-    }
-    
-    public static void getRolePlayCharacterTypePattern(StringBuilder sb, Characters player){
-        sb.append(player.getCurrentCell()).append(';')
-          .append(player.getCurrentOrientation().ordinal()).append(';')
-          .append("0;");
-
-        sb.append(player.getId()).append(';')
-          .append(player.getName()).append(';')
-          .append(player.getBreed()).append(';')
-          .append(player.getSkin()).append('^').append(player.getSize()).append(';')
-          .append(player.getGender()).append(';');
-
-        sb.append("0,0,0,0").append(';'); //TODO alignment
-
-        sb.append(StringUtils.toHexOrNegative(player.getColor1())).append(';')
-          .append(StringUtils.toHexOrNegative(player.getColor2())).append(';')
-          .append(StringUtils.toHexOrNegative(player.getColor3())).append(';');
-
-        /*boolean first = true;
-        for (int accessory : player.getAccessories()){
-            if (first) first = false;
-            else sb.append(',');
-
-            sb.append(accessory == 0 ? "" : StringUtil.toHex(accessory));
-        }*/
-        sb.append(';');
-
-        sb.append(player.getLevel() >= 100 ? (player.getLevel() == 200 ? '2' : '1') : '0');
-
-        sb.append(';')
-          .append(';');
-
-        sb.append(';');//Guild name
-
-        sb.append(';')
-          .append("0;;");
-    }
 }

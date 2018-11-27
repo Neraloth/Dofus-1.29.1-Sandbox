@@ -1,16 +1,16 @@
-package org.dofus.game.action;
+package org.dofus.game.actions;
 
 import org.apache.mina.core.session.IoSession;
 import org.dofus.database.objects.MapsData;
 import org.dofus.network.game.GameClient;
-import org.dofus.objects.Characters;
-import org.dofus.objects.Characters.OrientationEnum;
-import org.dofus.objects.MapTemplate;
-import org.dofus.objects.MapTemplate.Cell;
-import org.dofus.objects.MapTemplate.TriggerTemplate;
+import org.dofus.objects.maps.MapTemplate;
+import org.dofus.objects.maps.MapTemplate.Cell;
+import org.dofus.objects.maps.MapTemplate.TriggerTemplate;
 import org.dofus.objects.WorldData;
+import org.dofus.objects.actors.Characters;
+import org.dofus.objects.actors.EOrientation;
 
-public class RolePlayMovement implements GameAction {
+public class RolePlayMovement implements IGameAction {
 
 	private final GameClient client;
     private final String path;
@@ -24,9 +24,13 @@ public class RolePlayMovement implements GameAction {
         if(client.isBusy())
             System.out.println("client is busy.");
 
+        if(nextMap == null)
+        	return;
+        
         for(Characters actor : client.getCharacter().getCurrentMap().getActors().values()) {
         	IoSession actorSession = WorldData.getSessionByAccount().get(actor.getOwner());
-        	actorSession.write("GM|-" + client.getCharacter().getId());
+        	if(!actorSession.equals(client.getSession()))
+        		actorSession.write("GM|-" + client.getCharacter().getId());
        	}
         
         client.getCharacter().getCurrentMap().removeActor(client.getCharacter());
@@ -64,7 +68,7 @@ public class RolePlayMovement implements GameAction {
 
 	@Override
 	public void end() {
-		OrientationEnum orientation = Cell.decode(path.charAt(path.length() - 3));
+		EOrientation orientation = Cell.decode(path.charAt(path.length() - 3));
         short cellId = Cell.decode(path.substring(path.length() - 2));
 
         client.getCharacter().setCurrentOrientation(orientation);
@@ -86,7 +90,7 @@ public class RolePlayMovement implements GameAction {
         cancel();
     }
     
-    public String getPath(){
+    public String getPath() {
         return "a" + Cell.encode(client.getCharacter().getCurrentCell()) + path;
     }
 }

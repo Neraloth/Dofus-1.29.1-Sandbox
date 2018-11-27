@@ -1,12 +1,13 @@
-package org.dofus.objects;
+package org.dofus.objects.accounts;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.mina.core.session.IoSession;
+import org.dofus.objects.actors.Characters;
 import org.dofus.utils.Cipher;
 
-public class Accounts {
+public class Account {
 
 	private int id;
 	private String username;
@@ -24,7 +25,7 @@ public class Accounts {
 	private IoSession session;
 	private boolean connected = false;
 	
-	public Accounts(int id, String username, String password, String question, String answer, String nickname, boolean banned) {
+	public Account(int id, String username, String password, String question, String answer, String nickname, boolean banned) {
 		this.setId(id);
 		this.setUsername(username);
 		this.setPassword(password);
@@ -95,7 +96,7 @@ public class Accounts {
 	}
 
 	public static void setCharacters(ConcurrentMap<Integer, Characters> characters) {
-		Accounts.characters = characters;
+		Account.characters = characters;
 	}
 	
 	public Characters getCharacterById(int id) {

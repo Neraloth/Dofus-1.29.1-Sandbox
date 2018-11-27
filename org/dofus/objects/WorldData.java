@@ -4,6 +4,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.mina.core.session.IoSession;
+import org.dofus.objects.accounts.Account;
+import org.dofus.objects.actors.Characters;
 
 public class WorldData {
 
@@ -12,22 +14,22 @@ public class WorldData {
 	 */
 	
 	//Session By Account
-	private static final ConcurrentMap<Accounts, IoSession> accountsBySession = new ConcurrentHashMap<Accounts, IoSession>();
+	private static final ConcurrentMap<Account, IoSession> accountsBySession = new ConcurrentHashMap<Account, IoSession>();
 	//By id
 	private static final ConcurrentMap<Integer, Characters> characters = new ConcurrentHashMap<Integer, Characters>();
 	//By name
 	private static final ConcurrentMap<String, Characters> charactersByName = new ConcurrentHashMap<String, Characters>();
 	
-	public static ConcurrentMap<Accounts, IoSession> getSessionByAccount() {
+	public static ConcurrentMap<Account, IoSession> getSessionByAccount() {
 		return accountsBySession;
 	}
 	
-	public static void addSessionByAccount(Accounts account, IoSession session) {
+	public static void addSessionByAccount(Account account, IoSession session) {
 		if(!accountsBySession.containsKey(account))
 			accountsBySession.put(account, session);
 	}
 	
-	public static void removeSessionByAccount(Accounts account) {
+	public static void removeSessionByAccount(Account account) {
 		if(accountsBySession.containsKey(account))
 			accountsBySession.remove(account);
 	}

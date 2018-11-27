@@ -1,9 +1,9 @@
-package org.dofus.game.action;
+package org.dofus.game.actions;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public interface GameAction {
+public interface IGameAction {
 	
     GameActionType getActionType();
 
@@ -31,6 +31,7 @@ public interface GameAction {
         SPELL_CRITICAL(301),
         SPELL_FAILURE(302),
         MELEE_ATACK(303),
+        MAP_ACTION(500),
         ASK_FIGHT(900),
         ACCEPT_FIGHT(901),
         DECLINE_FIGHT(902),

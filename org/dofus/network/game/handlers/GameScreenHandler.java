@@ -2,17 +2,26 @@ package org.dofus.network.game.handlers;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.dofus.constants.EApplication;
+import org.dofus.constants.EConstants;
+import org.dofus.constants.ServersInformation;
+import org.dofus.constants.ServersInformation.Community;
 import org.dofus.database.objects.*;
 import org.dofus.network.game.Game;
 import org.dofus.network.game.GameClient;
 import org.dofus.network.game.GameClientHandler;
-import org.dofus.objects.Accounts;
-import org.dofus.objects.Characters;
-import org.dofus.objects.Characters.OrientationEnum;
 import org.dofus.objects.WorldData;
-import org.dofus.utils.Constants;
+import org.dofus.objects.accounts.Account;
+import org.dofus.objects.actors.Characters;
+import org.dofus.objects.actors.EOrientation;
+import org.dofus.objects.characters.Restriction;
+import org.dofus.objects.characters.Right;
+import org.dofus.objects.characters.Statistic;
+import org.dofus.objects.experiences.AlignmentExperience;
+import org.dofus.objects.experiences.CharacterExperience;
 import org.dofus.utils.StringUtils;
 
 public class GameScreenHandler extends GameClientHandler {
@@ -46,11 +55,7 @@ public class GameScreenHandler extends GameClientHandler {
 	                        Integer.parseInt(args[5])
 	                );
 	                break;
-	              
-	            case 'B': //TODO: Boost Stats player 
-	            	
-	                break;
-	
+	                
 	            case 'D': //Delete player
 	            	args = packet.substring(2).split("\\|");
 	            	
@@ -77,8 +82,8 @@ public class GameScreenHandler extends GameClientHandler {
 	            case 'L': //Player list
 	            	client.getSession().write(
 	                		charactersListMessage(
-	                				1, 
-	                				Constants.SUBSCRIPTION_DURATION.lValue, 
+	                				ServersInformation.getServerId(), 
+	                				EApplication.SUBSCRIPTION_DURATION.getlValue(), 
 	                				client.getAccount().getCharacters(),
 	                				client.getAccount()));
 	
@@ -101,16 +106,17 @@ public class GameScreenHandler extends GameClientHandler {
 	                break;
 	                
 	            case 'V': //Community
-	            	client.getSession().write("AV" + Constants.Community.FRENCH.value());
+	            	client.getSession().write("AV" + Community.FRENCH.get());
 	                break;
 	                
 	        default:
 	        	if(!packet.equals("Af"))
 	        		System.out.println("Unknow paquet <" + packet + "> in ServerScreenHandler");
+	        	
 	        	client.getSession().write("BN");
             }
 		} else { //If not connected !
-			Accounts account = AccountData.getAccountByKey(packet.substring(2));
+			Account account = AccountsData.getAccountByKey(packet.substring(2));
 			
             if(account != null) {
                 client.setAccount(account);
@@ -129,69 +135,98 @@ public class GameScreenHandler extends GameClientHandler {
 	private void parseCharacterCreationRequestMessage(String name, Byte breed, Byte gender,
             int color1, int color2, int color3) throws Exception {
 		
-		if(client.getAccount().getCharacters().size() >= 5) //Player per account
+		if(client.getAccount().getCharacters().size() >= EConstants.MAX_PLAYER_ON_SERVER.getInt()) //Player per account
 			client.getSession().write("AAEf");//Account full
-		else if(CharacterData.nicknameIsExist(name))
+		else if(CharactersData.nicknameIsExist(name))
 			client.getSession().write("AAEa"); //name already exist
 		else {
 			client.getSession().write("TB");
 			
-			Characters character = 
-					new Characters(
-							(int) uniqueId(),
-							client.getAccount(),
-							name,
-							(short) 1, //Level
-							breed, 
-							gender, 
-							color1, 
-							color2, 
-							color3, 
-							(short) ((breed * 10) + gender), //Skin
-							(short) 100, //Size 
-							MapsData.findById(7411), //map id 
-							(short) 250,
-							OrientationEnum.SOUTH_EAST);
-			
-			CharacterData.create(character, client.getAccount().getId());
-			
-			WorldData.addSessionByAccount(client.getAccount(), client.getSession());
-			
-			client.getAccount().addCharacter(character);
-			client.setCharacters(character);
+			try {
+				Characters character = new Characters(
+						(int) uniqueId(),
+						client.getAccount(),
+						name,
+						BreedsData.get(breed), 
+						gender, 
+						color1, 
+						color2, 
+						color3, 
+						(short) ((breed * 10) + gender), //Skin
+						EConstants.DEFAULT_SIZE.getShort(),
+						MapsData.findById(7411), //map id 
+						(short) 250,
+						EOrientation.SOUTH_EAST,
+						new Right(8192),
+						new Restriction(0),
+						BreedsData.get(breed).getLife(),
+						(short) 10000, //Energy
+						null, //Experience null because we call it after
+						0, //Kamas 
+						new ConcurrentHashMap<Integer, Integer>(), 
+						(short) 0, //Stats point 
+						(short) 0, //Spells point
+						(byte) 0, //Default alignment
+						null, //Alignment 
+						false //Show wings
+						);
+				character.setExperience(new CharacterExperience(
+						EConstants.DEFAULT_LEVEL.getShort(), //Start level
+						ExperiencesData.get(EConstants.DEFAULT_LEVEL.getShort()).getCharacter(),
+						ExperiencesData.get(EConstants.DEFAULT_LEVEL.getShort()),
+						character));
+
+				character.setAlignment(new AlignmentExperience(
+						(short) 0, //Start align
+						(long) 0, //Start honor
+						(byte) 0, //Start dishonor
+						ExperiencesData.get(EConstants.DEFAULT_LEVEL.getShort()),
+						character));
+				
+				character.setStats(new Statistic(character));
+				
+				CharactersData.create(character, client.getAccount().getId());
+				
+				WorldData.addSessionByAccount(client.getAccount(), client.getSession());
+				
+				client.getAccount().addCharacter(character);
+				client.setCharacters(character);
+			} catch(Exception e) {
+				System.out.println(e.getMessage());
+			}
 			
 			client.getSession().write("AAK"); //creation success
 			
-			client.getSession().write( //FIXME: Really need it? 
+			client.getSession().write(
             		charactersListMessage(
-            				1, 
-            				Constants.SUBSCRIPTION_DURATION.lValue, 
+            				ServersInformation.getServerId(), 
+            				EApplication.SUBSCRIPTION_DURATION.getlValue(),
             				client.getAccount().getCharacters(),
             				client.getAccount()));
 		}
 	}
 	
 	private void parseCharacterDeletionRequestMessage(int id, String answer) {
-		Characters character = CharacterData.getCharacterById(id);
+		Characters character = CharactersData.getCharacterById(id);
 		
 		if(character == null)
 			client.getSession().write("ADE");
-		else if(!client.getAccount().getAnswer().equalsIgnoreCase(answer) && character.getLevel() > 49)
+		else if(!client.getAccount().getAnswer().equalsIgnoreCase(answer) && character.getExperience().getLevel() > 49)
 			client.getSession().write("ADE");
 		else {
-			CharacterData.delete(character);
+			CharactersData.delete(character);
 			client.getAccount().removeCharacter(character);
 			
 			client.getSession().write(
             		charactersListMessage(
-            				1, 
-            				Constants.SUBSCRIPTION_DURATION.lValue, 
+            				ServersInformation.getServerId(), 
+            				EApplication.SUBSCRIPTION_DURATION.getlValue(), 
             				client.getAccount().getCharacters(),
             				client.getAccount()));
 		}
 	}
 	
-	public static String charactersListMessage(int serverId, long remainingSubscriptionTime, ConcurrentMap<Integer, Characters> characters, Accounts account) {
+	public static String charactersListMessage(int serverId, long remainingSubscriptionTime, ConcurrentMap<Integer, Characters> characters, Account account) {
         StringBuilder sb = new StringBuilder(50).append("ALK");
 
         sb.append(remainingSubscriptionTime).append("|");
@@ -205,7 +240,7 @@ public class GameScreenHandler extends GameClientHandler {
 
             sb.append(character.getId()).append(";")
               .append(character.getName()).append(";")
-              .append(character.getLevel()).append(";")
+              .append(character.getExperience().getLevel()).append(";")
               .append(character.getSkin()).append(";")
               .append(StringUtils.toHexOrNegative(character.getColor1())).append(";")
               .append(StringUtils.toHexOrNegative(character.getColor2())).append(";")
@@ -237,8 +272,8 @@ public class GameScreenHandler extends GameClientHandler {
             client.getSession().write(characterSelectionSucessMessage(
             		character.getId(),
             		character.getName(),
-                    character.getLevel(),
-                    character.getBreed(),
+                    character.getExperience().getLevel(),
+                    character.getBreedId(),
                     character.getGender(),
                     character.getSkin(),
                     character.getColor1(),

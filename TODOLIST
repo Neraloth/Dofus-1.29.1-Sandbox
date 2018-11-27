@@ -2,10 +2,48 @@ Configuration externe
 Logger
 System cache/plugins
 Class for packet
-Characters ID with time and date fixe?
-Night time
 Make a bot for testing capacities
-Complete Constants class with dofus source
 
+TODO IG :
+	- Emote
+	- Items/equipments
+		- Obvi
+		- Tourmenteur
+		- Item class
+	- Bank/Trash
+	- Guild
+	- Prisms
+	- Quest
+	- House with trunk
+	- Spells
+	- Job with craft
+	- Fight
+	- Night time
+	- Pathfinding
+	- Maps instance if too many players on there
+		- Example for GM+/-
+			- for all(maps.sessioned() : map)
+				for all(map.getActors())
+					send()
 
-Ecran noir au moment de selecte le perso (j'ai déco/reco et c'etais bon) mais verif d'ou ca vient (client)?
+Créer une classe qui s'occupe de vider les tableaux
+	- Example : Si le perso se déco : on appel cette classe au lieu d'éparpiller des obj.remove partout
+
+Créer une classe CharacterManager qui serait impl pour gérer :
+	- Off-line character
+	- Non playable character
+	- Playable character
+	- Monster
+	- Mutant
+	
+Idées poubelle :
+	- Si elle est null get les infos dessus et la créer en bdd ? évite de toute les recherchés (a voir comment ca marche)
+	
+Enlever le charId avec le time and date ca peux être négatif
+Si changement de perso on recharge les perso via la bdd trouvé un truc (car on efface dès le onClosed du rp handler)
+
+Anka'like :
+	- /away: A VOIR...
+		- Perso invi :
+			- Ne voit aucun joueur (permet de moins lag?)
+			- Personne le voit mais "ne peux rien faire" (peux quand meme combattre etc...) 

@@ -1,12 +1,12 @@
 package org.dofus.network.server.handlers;
 
 import org.apache.mina.core.session.IoSession;
-import org.dofus.database.objects.AccountData;
+import org.dofus.database.objects.AccountsData;
 import org.dofus.network.server.Server;
 import org.dofus.network.server.ServerClient;
 import org.dofus.network.server.ServerClientHandler;
-import org.dofus.objects.Accounts;
 import org.dofus.objects.WorldData;
+import org.dofus.objects.accounts.Account;
 
 public class AuthentificationHandler extends ServerClientHandler {
 
@@ -18,7 +18,7 @@ public class AuthentificationHandler extends ServerClientHandler {
 	public void parse(String packet) throws Exception {
 		String[] data = packet.split("\n");
 		
-		Accounts account = AccountData.load(data[0].trim());
+		Account account = AccountsData.load(data[0].trim());
 		
 		if(account != null) { //XXX Account is loaded
 			if(!account.isConnected()) { //XXX Account not connected

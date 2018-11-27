@@ -1,6 +1,6 @@
 package org.dofus.network.server.handlers;
 
-import org.dofus.database.objects.AccountData;
+import org.dofus.database.objects.AccountsData;
 import org.dofus.network.server.Server;
 import org.dofus.network.server.ServerClient;
 import org.dofus.network.server.ServerClientHandler;
@@ -18,9 +18,9 @@ public class NicknameHandler extends ServerClientHandler {
 			return;
 		
 		//TODO: Restriction name
-		if(!AccountData.nicknameIsExist(packet)) {
+		if(!AccountsData.nicknameIsExist(packet)) {
 			client.getAccount().setNickname(packet);
-			AccountData.updateNickname(client.getAccount());
+			AccountsData.updateNickname(client.getAccount());
 			client.setHandler(new ServerChoiceHandler(server, client));
 		} else
 			client.getSession().write("AlEs");

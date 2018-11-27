@@ -15,9 +15,8 @@ public class VersionHandler extends ServerClientHandler {
 	 */
 	@Override
 	public void parse(String packet) throws Exception {
-		if(packet.equals("1.29.1")) {
+		if(packet.equals("1.29.1"))
 			client.setHandler(new AuthentificationHandler(server, client));
-		}
 		else
 			client.getSession().write("AlEv" + "1.29.1");
 	}

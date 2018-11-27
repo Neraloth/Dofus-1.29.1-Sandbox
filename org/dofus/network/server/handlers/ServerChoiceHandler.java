@@ -1,28 +1,30 @@
 package org.dofus.network.server.handlers;
 
-import org.dofus.database.objects.AccountData;
-import org.dofus.database.objects.CharacterData;
+import org.dofus.constants.EApplication;
+import org.dofus.constants.ServersInformation;
+import org.dofus.constants.ServersInformation.Community;
+import org.dofus.database.objects.AccountsData;
+import org.dofus.database.objects.CharactersData;
 
 import org.dofus.network.server.Server;
 import org.dofus.network.server.ServerClient;
 import org.dofus.network.server.ServerClientHandler;
-import org.dofus.objects.Characters;
-import org.dofus.utils.Constants;
+import org.dofus.objects.actors.Characters;
 
 public class ServerChoiceHandler extends ServerClientHandler {
 
 	protected ServerChoiceHandler(Server server, ServerClient client) {
 		super(server, client);
 
-		AccountData.addAccountByKey(client.getAccount(), client.getKey()); //Key for the game
+		AccountsData.addAccountByKey(client.getAccount(), client.getKey()); //Key for the game
 		
 		client.getSession().write("Ad" + client.getAccount().getNickname());
-		client.getSession().write("Ac" + Constants.Community.FRENCH.value()); //Community
-		client.getSession().write("AH1;1;0;0");
+		client.getSession().write("Ac" + Community.FRENCH.ordinal()); //Community
+		client.getSession().write(ServersInformation.get());
 		client.getSession().write("AlK1");
 		client.getSession().write("AQ" + client.getAccount().getQuestion().replace(" ", "+"));
 		
-		CharacterData.load(client.getAccount());
+		CharactersData.load(client.getAccount());
 		
 	}
 
@@ -49,9 +51,9 @@ public class ServerChoiceHandler extends ServerClientHandler {
 	    		client.getSession().write(new StringBuilder(
 	    				10 + chrSize * 5)
 	    				.append("AxK")
-	    				.append(Constants.SUBSCRIPTION_DURATION.getlValue())
+	    				.append(EApplication.SUBSCRIPTION_DURATION.getlValue())
 	    		 		.append('|')
-	    		 		.append(1).append(',') //Server id
+	    		 		.append(ServersInformation.getServerId()).append(',') //Server id
 	    		 		.append(chrSize).toString());
 	            break;
         }

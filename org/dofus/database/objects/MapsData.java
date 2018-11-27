@@ -7,8 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.dofus.database.Connector;
-import org.dofus.objects.MapTemplate;
-import org.dofus.objects.MapTemplate.TriggerTemplate;
+import org.dofus.objects.maps.MapTemplate;
+import org.dofus.objects.maps.MapTemplate.TriggerTemplate;
 
 public class MapsData {
 

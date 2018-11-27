@@ -7,68 +7,61 @@ import org.dofus.objects.characters.Party;
 
 public class PartyParser {
 
-	public static void accept(Characters character, IoSession session) {
-		Characters chief = WorldData.getCharacterByName().get(character.getInvitation());
-		IoSession chiefSession = WorldData.getSessionByAccount().get(chief.getOwner());
-		Party party = chief.getParty();
+	public static void accept(Characters target, IoSession targetSession) {
+		Characters character = WorldData.getCharacterByName().get(target.getInvitation());
+		IoSession session = WorldData.getSessionByAccount().get(character.getOwner());
+		Party party = character.getParty();
 		
-		if(party == null) { //Si le groupe n'existe pas (première invitation)
-			party = new Party(chief, character);
+		if(party == null) {
+			party = new Party(character, target);
 			
-			//On send les invitations
+			targetSession.write("PCK" + party.getChief().getName());
+			targetSession.write("PL" + party.getChief().getId());
+			
 			session.write("PCK" + party.getChief().getName());
 			session.write("PL" + party.getChief().getId());
-			
-			chiefSession.write("PCK" + party.getChief().getName());
-			chiefSession.write("PL" + party.getChief().getId());
 						
-			StringBuilder sb = new StringBuilder(3 + 15 * party.getMembersSize());
-			sb.append("PM+");
+			target.setParty(party);
+			character.setParty(party);
+			
+			StringBuilder sb = new StringBuilder().append("PM+");
 			
 			boolean first = true;
-			for(Characters player : party.getMembers()) {
+			for(Characters player : party.getMembers().values()) {
 				if(!first)
 					sb.append("|");
 				sb.append(player.parseParty());
 				first = false;
 			}
 			
-			character.setParty(party);
+			targetSession.write(sb.toString());
 			session.write(sb.toString());
 			
-			chief.setParty(party);
-			chiefSession.write(sb.toString());
-		} else { //Il y a déjà des joueurs dans le groupe
-			session.write("PCK" + party.getChief().getName());
-			session.write("PL" + party.getChief().getId());
+		} else {
+			targetSession.write("PCK" + party.getChief().getName());
+			targetSession.write("PL" + party.getChief().getId());
 			
-			System.out.println("Character = " + character.getName());
-			System.out.println("Chief = " + chief.getName());
-			
-			character.setParty(party);
-			party.addMember(character);
-			
-			for(Characters player : party.getMembers()) {
+			StringBuilder base = new StringBuilder().append("PM+");
+			for(Characters player : party.getMembers().values()) {
 				IoSession players = WorldData.getSessionByAccount().get(player.getOwner());
-				players.write("PM+" + player.parseParty());
+				players.write(base.append(target.parseParty()).toString());
 			}
+			
+			StringBuilder allMembers = new StringBuilder().append("PM+");
+			boolean isFirst = true;
+			for(Characters player : party.getMembers().values()) {
+				if(!isFirst)
+					allMembers.append("|");
+				allMembers.append(player.parseParty());
+				isFirst = false;
+			}
+			
+			target.setParty(party);
+			party.addMember(target);
+			
+			targetSession.write(allMembers.append("|").append(target.parseParty()).toString());
 		}
-		
-		character.setParty(party);
-		
-		/*StringBuilder sb = new StringBuilder();
-		sb.append("PM+");
-		
-		boolean first = true;
-		for(Characters player : party.getMembers()) {
-			if(!first)
-				sb.append("|");
-			sb.append(player.parseParty());
-			first = false;
-		}
-		session.write(sb.toString());*/
 		session.write("PR");
-		chiefSession.write("PR");
 	}
 
 	public static void invitation(Characters character, IoSession session, String name) {
@@ -96,23 +89,22 @@ public class PartyParser {
 
 	public static void refuse(Characters character, IoSession session) {
 		session.write("BN");
-		Characters target2 = WorldData.getCharacterByName().get(character.getInvitation());
+		Characters target = WorldData.getCharacterByName().get(character.getInvitation());
 		character.setInvitation(null);
-		target2.setInvitation(null);
-		IoSession targetSession2 = WorldData.getSessionByAccount().get(target2.getOwner());
-    	targetSession2.write("PR");
+		target.setInvitation(null);
+		IoSession targetSession = WorldData.getSessionByAccount().get(target.getOwner());
+    	targetSession.write("PR");
 	}
 
 	public static void leave(Characters character, IoSession session, String packet) {
-		Party party2 = character.getParty();
-		if(packet.length() == 2) { //Leave alone
-			party2.leave(character); 
-			session.write("PV");
-		} else if(party2.isChief(character)) { //Kick
-			Characters kick = WorldData.getCharacters().get(Integer.parseInt(packet.substring(2)));
-			party2.leave(kick);
-			IoSession targetSession4 = WorldData.getSessionByAccount().get(kick.getOwner());
-			targetSession4.write("PV" + character.getId());
+		Party party = character.getParty();
+		if(packet.equals("PV")) { //Leave alone
+			party.leave(character);
+		} else { //Kick
+			int characterId = Integer.parseInt(packet.substring(2));
+			Characters kick = WorldData.getCharacters().get(characterId);
+			
+			party.leave(kick);
 		}
 	}
 

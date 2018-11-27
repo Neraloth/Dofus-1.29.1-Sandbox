@@ -36,8 +36,12 @@
 		- [WIP] Add partially alignment system
 		- Saving character
 		- Rights and restrictions to base36
-		- [WIP] Party
+		- Party
 		
 	- Bug fix
 		- Movement roll-back (send 2x packet)
 		- Remove character on map on disconnection/changing characters
+        
+[3.17.39-a]
+    - Bug Fix
+        - Party invitation accept, leave

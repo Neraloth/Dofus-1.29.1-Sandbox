@@ -1,19 +1,22 @@
 package org.dofus.objects.characters;
 
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import org.apache.mina.core.session.IoSession;
+import org.dofus.objects.WorldData;
 import org.dofus.objects.actors.Characters;
 
 public class Party {
 
 	private Characters chief;
 	//By id
-	private ArrayList<Characters> members = new ArrayList<Characters>();
+	private ConcurrentMap<Integer, Characters> members = new ConcurrentHashMap<Integer, Characters>();
 	
 	public Party(Characters chief, Characters member) {
 		setChief(chief);
-		getMembers().add(chief);
-		getMembers().add(member);
+		members.put(chief.getId(), chief);
+		members.put(member.getId(), member);
 	}
 
 	public Characters getChief() {
@@ -28,16 +31,16 @@ public class Party {
 		return chief == character;
 	}
 	
-	public ArrayList<Characters> getMembers() {
+	public ConcurrentMap<Integer, Characters> getMembers() {
 		return members;
 	}
 
-	public void setMembers(ArrayList<Characters> members) {
+	public void setMembers(ConcurrentMap<Integer, Characters> members) {
 		this.members = members;
 	}
 	
 	public void addMember(Characters character) {
-		members.add(character.getId(), character);
+		members.put(character.getId(), character);
 	}
 	
 	public int getMembersSize() {
@@ -46,19 +49,32 @@ public class Party {
 	
 	public int getMembersLevel() {
 		int level = 0;
-		for(Characters character : members)
+		for(Characters character : members.values())
 			level += character.getExperience().getLevel();
 		return level;
 	}
 	
-	public void leave(Characters character) {
-		character.setParty(null);
-		members.remove(character);
-		if(members.size() == 1) {
-			members.get(0).setParty(null);
-			members.get(0).getOwner().getSession().write("PV");
-		} else 
-			character.getOwner().getSession().write("PM-" + character.getId());
+	public void leave(Characters leaver) {
+		Characters chief = getChief();
+		IoSession chiefSession = WorldData.getSessionByAccount().get(chief.getOwner());
+		IoSession leaverSession = WorldData.getSessionByAccount().get(leaver.getOwner());
 		
+		leaver.setParty(null);
+		members.remove(leaver.getId());
+		
+		if(getMembersSize() == 1) {
+			chief.setParty(null);
+			
+			leaverSession.write("PV");
+			chiefSession.write("PV");
+		} else {
+			for(Characters characters : members.values()) {
+				IoSession memberSession = WorldData.getSessionByAccount().get(characters.getOwner());
+				memberSession.write("PM-" + leaver.getId());
+			}
+			
+			leaverSession.write("PM-" + leaver.getId());
+			leaverSession.write("PV");
+		}
 	}
 }
